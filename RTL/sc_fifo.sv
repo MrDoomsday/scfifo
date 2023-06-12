@@ -83,5 +83,6 @@ always_ff @ (posedge clk)
 //status signal
 assign full = (wr_ptr[fifo_depth-1:0] == rd_ptr[fifo_depth-1:0]) & wr_ptr[fifo_depth] & !rd_ptr[fifo_depth];//interval = full counter, fifo full
 assign empty = (wr_ptr[fifo_depth:0] == rd_ptr[fifo_depth:0]);
+assign use_words = cnt_word;
 
 endmodule 
