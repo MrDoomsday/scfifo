@@ -106,7 +106,7 @@ module sc_fifo_tb();
                     $stop();
                 end
                 rd = 1'b0;
-                repeat($urandom_range(0,5)) @ (posedge clk);
+                repeat($urandom_range(0,10)) @ (posedge clk);
             end
             else begin
                 @(posedge clk);
@@ -145,7 +145,23 @@ covergroup cg_rd_fifo @ (posedge clk);
     }
 endgroup
 
+
+covergroup cg_full_fifo @ (posedge clk);
+    c1: coverpoint full {
+        bins b1 = (0=>0=>0);
+        bins b2 = (0=>0=>1);
+        bins b3 = (0=>1=>0);
+        bins b4 = (0=>1=>1);
+        bins b5 = (1=>0=>0);
+        bins b6 = (1=>0=>1);//not check in coverage
+        bins b7 = (1=>1=>0);
+        bins b8 = (1=>1=>1);
+    }
+endgroup
+
+
 cg_wr_fifo cg_wr_fifo_inst = new();
 cg_rd_fifo cg_rd_fifo_inst = new();
+cg_full_fifo cg_full_fifo_inst = new();
 
 endmodule
