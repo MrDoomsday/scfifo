@@ -1,7 +1,7 @@
 module axis_fifo_tb();
 
-    localparam T_DATA_WIDTH = 32;
-    localparam DEPTH = 10;
+    localparam T_DATA_WIDTH = 320;
+    localparam SIZE = 1024;
 
     bit clk;
     bit reset_n;
@@ -23,9 +23,9 @@ module axis_fifo_tb();
     int count_transaction = 100000;
 
 
-    axis_fifo #(
+    axis_fifo_fr #(
         .T_DATA_WIDTH   (T_DATA_WIDTH),
-        .DEPTH          (DEPTH)
+        .SIZE          (SIZE)
     ) DUT (
         .clk        (clk),
         .reset_n    (reset_n),
