@@ -41,48 +41,50 @@ module sc_fifo #(
 );
 
 
-reg [data_width-1:0] ram [2**fifo_depth-1:0];
-reg [fifo_depth:0] wr_ptr, rd_ptr;
-reg [fifo_depth:0] cnt_word;
-
+	reg [data_width-1:0] ram [2**fifo_depth-1:0];
+	reg [fifo_depth:0] wr_ptr, rd_ptr;
+	reg [fifo_depth:0] cnt_word;
 
 
 
 
 //current point--------------------------------------------------------------
-always_ff @ (posedge clk or negedge reset_n)
-	if(!reset_n) wr_ptr <= {(fifo_depth+1){1'b0}};
-	else if(wr && ~full) wr_ptr <= wr_ptr + 1'b1;
-	else if(clear) wr_ptr <= {(fifo_depth+1){1'b0}};
+	always_ff @ (posedge clk or negedge reset_n) begin
+		if(!reset_n) wr_ptr <= {(fifo_depth+1){1'b0}};
+		else if(wr && ~full) wr_ptr <= wr_ptr + 1'b1;
+		else if(clear) wr_ptr <= {(fifo_depth+1){1'b0}};
+	end
+		
+	always_ff @ (posedge clk or negedge reset_n) begin
+		if(!reset_n) rd_ptr <= {(fifo_depth+1){1'b0}};
+		else if(rd && ~empty) rd_ptr <= rd_ptr + 1'b1;
+		else if(clear) rd_ptr <= {(fifo_depth+1){1'b0}};
+	end
 
-	
-always_ff @ (posedge clk or negedge reset_n)
-	if(!reset_n) rd_ptr <= {(fifo_depth+1){1'b0}};
-	else if(rd && ~empty) rd_ptr <= rd_ptr + 1'b1;
-	else if(clear) rd_ptr <= {(fifo_depth+1){1'b0}};
-
-always_ff @ (posedge clk or negedge reset_n)
-	if(!reset_n) cnt_word <= {(fifo_depth+1){1'b0}};
-	else if(clear) cnt_word <= {(fifo_depth+1){1'b0}};
-	else begin
-		case({rd && ~empty, wr && ~full})
-			2'b01:	cnt_word <= cnt_word + 1'b1;
-			2'b10: 	cnt_word <= cnt_word - 1'b1;
-			default: cnt_word <= cnt_word;
-		endcase 
+	always_ff @ (posedge clk or negedge reset_n) begin
+		if(!reset_n) cnt_word <= {(fifo_depth+1){1'b0}};
+		else if(clear) cnt_word <= {(fifo_depth+1){1'b0}};
+		else begin
+			case({rd && ~empty, wr && ~full})
+				2'b01:	cnt_word <= cnt_word + 1'b1;
+				2'b10: 	cnt_word <= cnt_word - 1'b1;
+				default: cnt_word <= cnt_word;
+			endcase 
+		end
 	end
 
 //RAM R/W--------------------------------------------------------------
-always_ff @ (posedge clk)
-	if(wr && ~full)	ram[wr_ptr[fifo_depth-1:0]] <= data_in;
+	always_ff @ (posedge clk) begin
+		if(wr && ~full)	ram[wr_ptr[fifo_depth-1:0]] <= data_in;
+	end
 
-always_ff @ (posedge clk)
-	if(rd && ~empty) data_out <= ram[rd_ptr[fifo_depth-1:0]];	
-
+	always_ff @ (posedge clk) begin
+		if(rd && ~empty) data_out <= ram[rd_ptr[fifo_depth-1:0]];	
+	end
 //----------------------------------------------------------------------------
 //status signal
-assign full = (wr_ptr[fifo_depth-1:0] == rd_ptr[fifo_depth-1:0]) & (wr_ptr[fifo_depth] != rd_ptr[fifo_depth]);//interval = full counter, fifo full
-assign empty = (wr_ptr[fifo_depth:0] == rd_ptr[fifo_depth:0]);
-assign use_words = cnt_word;
+	assign full = (wr_ptr[fifo_depth] ^ rd_ptr[fifo_depth]) & (wr_ptr[fifo_depth-1:0] == rd_ptr[fifo_depth-1:0]);//interval = full counter, fifo full
+	assign empty = (wr_ptr[fifo_depth:0] == rd_ptr[fifo_depth:0]);
+	assign use_words = cnt_word;
 
 endmodule 
