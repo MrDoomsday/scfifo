@@ -238,8 +238,8 @@ module multi_push_multi_pop_fifo #(
                 assign wrmask_rrr_next[i] = wrmask_rr;
                 assign wdata_rrr_next[i] = wdata_rr;
             end else begin
-                assign wrmask_rrr_next[i] = {wrmask_rr[AMOUNT_PUSH_POP-1-i:0], wrmask_rr[AMOUNT_PUSH_POP-1:AMOUNT_PUSH_POP-i]};
-                assign wdata_rrr_next[i] = {wdata_rr[(WIDTH_DATA*AMOUNT_PUSH_POP-1-WIDTH_DATA*i):0], wdata_rr[WIDTH_DATA*AMOUNT_PUSH_POP-1:WIDTH_DATA*AMOUNT_PUSH_POP-WIDTH_DATA*i]}; // сдвиг влево
+                assign wrmask_rrr_next[i] = {wrmask_rr[AMOUNT_PUSH_POP-1-i:0], wrmask_rr[AMOUNT_PUSH_POP-1:AMOUNT_PUSH_POP-i]};// циклический сдвиг влево
+                assign wdata_rrr_next[i] = {wdata_rr[(WIDTH_DATA*AMOUNT_PUSH_POP-1-WIDTH_DATA*i):0], wdata_rr[WIDTH_DATA*AMOUNT_PUSH_POP-1:WIDTH_DATA*AMOUNT_PUSH_POP-WIDTH_DATA*i]}; 
             end
         end
     endgenerate
@@ -363,7 +363,7 @@ module multi_push_multi_pop_fifo #(
             if(i == 0 || i > AMOUNT_PUSH_POP-1) begin
                 assign pop_data_next[i] = rdata_rrrrr;
             end else begin
-                assign pop_data_next[i] = {rdata_rrrrr[WIDTH_DATA*i-1:0], rdata_rrrrr[WIDTH_DATA*AMOUNT_PUSH_POP-1:WIDTH_DATA*i]}; // сдвиг вправо
+                assign pop_data_next[i] = {rdata_rrrrr[WIDTH_DATA*i-1:0], rdata_rrrrr[WIDTH_DATA*AMOUNT_PUSH_POP-1:WIDTH_DATA*i]}; // циклический сдвиг вправо
             end
         end
     endgenerate
@@ -391,13 +391,13 @@ module multi_push_multi_pop_fifo #(
     // проверка является ли запись или чтение данного количества слов допустимой
     SVA_CHECK_REQUEST_PUSH: assert property (
         @(posedge clk) disable iff(!reset_n)
-        push <= can_push | push <= AMOUNT_PUSH_POP
+        push <= can_push & push <= AMOUNT_PUSH_POP
     ) else $error("SVA_ERROR: The number of words being recorded exceeds one of the limits");
 
 
     SVA_CHECK_REQUEST_POP: assert property (
         @(posedge clk) disable iff(!reset_n)
-        pop <= can_pop | pop <= AMOUNT_PUSH_POP
+        pop <= can_pop & pop <= AMOUNT_PUSH_POP
     ) else $error("SVA_ERROR: Attempt to read an invalid number of words out of range");
 
     // проверка превышения счетчиками контроля переполнения заданных лимитов
